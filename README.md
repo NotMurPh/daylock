@@ -7,8 +7,6 @@
   <a href="https://github.com/NotMurPh/daylock/releases/latest">Manual download</a>
 </p>
 
-![The Hideout in daylight](images/01_hideout_hall.jpg)
-
 ## Overview
 
 Every MOBA is set at night time and well I got tired, day just looks way better.
