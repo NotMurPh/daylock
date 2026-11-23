@@ -1,0 +1,25 @@
+{
+  "format": "dmm-source",
+  "protocolVersion": "1.0",
+  "sourceId": "daylock",
+  "name": "Daylock",
+  "gameId": "deadlock",
+  "homepageUrl": "https://notmurph.github.io/daylock/",
+  "catalog": {
+    "kind": "static",
+    "indexUrl": "./catalog.json"
+  },
+  "networkOrigins": {
+    "api": [
+      "https://notmurph.github.io"
+    ],
+    "downloads": [
+      "https://github.com",
+      "https://release-assets.githubusercontent.com",
+      "https://objects.githubusercontent.com"
+    ],
+    "media": [
+      "https://notmurph.github.io"
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "daylock",
+  "title": "Daylock - Daytime Midtown & Hideout",
+  "availability": "available",
+  "isNsfw": false,
+  "description": "Deadlock is always at night, so this makes it day. Midtown and the Hideout become a sunny afternoon: the sun is baked into the map lighting with real shadows from buildings, bridges and props, the sky is blue with clouds, and the night lamps, neon and window glow are turned down.\n\nVisual only. Walls, cover (vent steam, plaza fog), items and spawns are the same as the normal map.\n\nRuns about 7% faster than stock (467 vs 438 average FPS at 11 spots around Midtown), since the night storm and smog are gone.\n\nIf a Deadlock update changes Midtown or the Hideout, turn Daylock off until it's updated.\n\nMade by ImMurPh, built with Claude.",
+  "descriptionFormat": "markdown",
+  "author": "ImMurPh",
+  "tags": [
+    "daytime",
+    "lighting",
+    "map",
+    "midtown",
+    "hideout",
+    "performance"
+  ],
+  "images": [
+    "https://notmurph.github.io/daylock/images/hideout.jpg",
+    "https://notmurph.github.io/daylock/images/midtown_rooftop.jpg",
+    "https://notmurph.github.io/daylock/images/midtown_chinatown.jpg"
+  ],
+  "homepageUrl": "https://notmurph.github.io/daylock/",
+  "updatedAt": "2026-11-23T22:00:00Z",
+  "release": {
+    "id": "v1.0",
+    "contentRevision": "v1.0",
+    "version": "1.0",
+    "publishedAt": "2026-11-23T22:00:00Z",
+    "changelog": "First release: daytime Midtown and Hideout.",
+    "artifacts": [
+      {
+        "id": "daylock-zip",
+        "filename": "Daylock_v1.0.zip",
+        "format": "zip",
+        "download": {
+          "url": "https://github.com/NotMurPh/daylock/releases/download/v1.0/Daylock_v1.0.zip"
+        },
+        "size": 910601639,
+        "hashes": {
+          "sha256": "45a7ef05fa902cbd64d8d5ab6f664690747b277ccb0dfc24781efc03e4c4a550"
+        }
+      }
+    ],
+    "installation": {
+      "mode": "manual"
+    }
+  }
+}

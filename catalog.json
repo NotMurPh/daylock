@@ -1,0 +1,12 @@
+{
+  "snapshotId": "daylock-1.0",
+  "items": [
+    {
+      "id": "daylock",
+      "title": "Daylock - Daytime Midtown & Hideout",
+      "availability": "available",
+      "isNsfw": false,
+      "detailUrl": "./mods/daylock.json"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daylock</title>
+<style>
+  :root { --bg:#f4f1ea; --fg:#1d1b18; --muted:#5f5a52; --accent:#d9822b; --card:#fffdf8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#16140f; --fg:#f1ede4; --muted:#a59f94; --accent:#f0a04b; --card:#211e18; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:44px; margin:0 0 4px; letter-spacing:-0.02em; }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  img { width:100%; border-radius:10px; display:block; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:12px 0 28px; }
+  @media (max-width:560px) { .grid { grid-template-columns:1fr; } }
+  .buttons { display:flex; flex-wrap:wrap; gap:10px; margin:24px 0 8px; }
+  a.btn { display:inline-block; padding:11px 18px; border-radius:8px; text-decoration:none; font-weight:600;
+          background:var(--accent); color:#1a1206; }
+  a.btn.alt { background:var(--card); color:var(--fg); border:1px solid var(--muted); }
+  code { background:var(--card); padding:2px 6px; border-radius:5px; word-break:break-all; }
+  p.small { color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Daylock</h1>
+  <p class="sub">Daytime Midtown and Hideout for Deadlock</p>
+  <img src="images/hideout.jpg" alt="The Hideout in daylight">
+  <div class="buttons">
+    <a class="btn" href="deadlock-mod-manager://sources/install?url=https%3A%2F%2Fnotmurph.github.io%2Fdaylock%2Fdmm-source.json&source=daylock&listing=daylock">Install with Mod Manager</a>
+    <a class="btn alt" href="deadlock-mod-manager://sources/add?url=https%3A%2F%2Fnotmurph.github.io%2Fdaylock%2Fdmm-source.json">Add source to Mod Manager</a>
+    <a class="btn alt" href="https://github.com/NotMurPh/daylock/releases">Manual download</a>
+  </div>
+  <p class="small">The buttons open Deadlock Mod Manager. Or add this source by hand under Settings &gt; Mods &gt; Mod sources:<br><code>https://notmurph.github.io/daylock/dmm-source.json</code></p>
+  <p>A sunny afternoon instead of the night: real sun shadows baked into the map lighting, a blue sky with clouds,
+     and the night lamps and neon turned down. It only changes how the maps look, gameplay and cover stay the same,
+     and it runs about 7% faster than stock.</p>
+  <div class="grid">
+    <img src="images/midtown_rooftop.jpg" alt="Midtown basketball rooftop in daylight">
+    <img src="images/midtown_chinatown.jpg" alt="Midtown Chinatown in daylight">
+  </div>
+  <p class="small">Made by ImMurPh, built with Claude. <a href="https://github.com/NotMurPh/daylock">GitHub</a></p>
+</main>
+</body>
+</html>
