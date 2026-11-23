@@ -14,7 +14,9 @@ Daylock turns Deadlock's Midtown and Hideout into a sunny afternoon.
 
 ## Video
 
-[![Daylock video](https://img.youtube.com/vi/34hZJOcqCVo/maxresdefault.jpg)](https://youtu.be/34hZJOcqCVo)
+[![Watch the Daylock video on YouTube](images/00_video.jpg)](https://youtu.be/34hZJOcqCVo)
+
+▶ [Watch on YouTube](https://youtu.be/34hZJOcqCVo)
 
 ## Features
 
