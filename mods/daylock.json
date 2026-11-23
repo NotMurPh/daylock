@@ -3,9 +3,9 @@
   "title": "Daylock - Daytime Midtown & Hideout",
   "availability": "available",
   "isNsfw": false,
-  "description": "Deadlock is always at night, so this makes it day. Midtown and the Hideout become a sunny afternoon: the sun is baked into the map lighting with real shadows from buildings, bridges and props, the sky is blue with clouds, and the night lamps, neon and window glow are turned down.\n\nVisual only. Walls, cover (vent steam, plaza fog), items and spawns are the same as the normal map.\n\nRuns about 7% faster than stock (467 vs 438 average FPS at 11 spots around Midtown), since the night storm and smog are gone.\n\nIf a Deadlock update changes Midtown or the Hideout, turn Daylock off until it's updated.\n\nMade by ImMurPh, built with Claude.",
+  "description": "Deadlock is always at night, so this makes it day. Midtown and the Hideout become a sunny afternoon: the sun is baked into the map lighting with real shadows from buildings, bridges and props, the sky is blue with clouds, and the night lamps, neon and window glow are turned down.\n\nVisual only. Walls, cover (vent steam, plaza fog), items and spawns are the same as the normal map.\n\nRuns about 7% faster than stock (467 vs 438 average FPS at 11 spots around Midtown), since the night storm and smog are gone.\n\nIf a Deadlock update changes Midtown or the Hideout, turn Daylock off until it's updated.\n\nMade by Murphy, built with Claude.",
   "descriptionFormat": "markdown",
-  "author": "ImMurPh",
+  "author": "Murphy",
   "tags": [
     "daytime",
     "lighting",

@@ -48,4 +48,4 @@ turn Daylock off until there's an updated version here. Updates that don't touch
 
 ## Credits
 
-Made by ImMurPh, built with [Claude](https://claude.com/claude-code).
+Made by Murphy, built with [Claude](https://claude.com/claude-code).
