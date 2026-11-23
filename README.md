@@ -1,50 +1,58 @@
-# Daylock
+<h1 align="center">Daylock</h1>
+<p align="center"><b>Daytime Midtown and Hideout for Deadlock</b></p>
 
-Daytime Midtown and Hideout for Deadlock.
+<p align="center">
+  <a href="https://notmurph.github.io/daylock/"><b>⬇ Install with Deadlock Mod Manager</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/NotMurPh/daylock/releases/latest">Manual download</a>
+</p>
 
-![Daylock in the Hideout](images/hideout.jpg)
+![The Hideout in daylight](images/01_hideout_hall.jpg)
 
-Deadlock is always at night, so I made it day. Daylock turns Midtown and the Hideout into a sunny
-afternoon: the sun is baked into the map lighting, so buildings, bridges and props cast real shadows
-and light comes in through the windows. The sky is blue with clouds, and the street lamps, neon and
-lit windows are turned down so they don't glow in broad daylight.
+## Overview
 
-It only changes how the maps look. Walls, cover (vent steam, the sunken plaza fog), items and spawns
-are exactly the same as the normal map, so nobody gets an advantage from it.
+Every MOBA is set at night time and well I got tired, day just looks way better.
+Daylock turns Deadlock's Midtown and Hideout into a sunny afternoon.
 
-It also runs a little faster: about 7% more FPS than stock in my testing (467 vs 438 average at the
-same 11 spots around Midtown), mostly because the night storm and smog are gone.
+## Video
+
+[![Daylock video](https://img.youtube.com/vi/34hZJOcqCVo/maxresdefault.jpg)](https://youtu.be/34hZJOcqCVo)
+
+## Features
+
+- **Real sunlight:** buildings and props cast real shadows, and sun comes in through windows
+- **~7% more FPS:** the night storm and smog effects are gone, so there's less to render
+- **Not an unfair advantage:** walls, cover (vent steam, plaza fog), items and spawns are untouched
+- **Blue sky** with clouds instead of the night sky
+- **Night lights toned down:** lamps and neon don't glow like it's midnight, abilities look the same
+- **Also includes the Hideout,** practice hall too
+- **One-click install and updates** through Deadlock Mod Manager
+
+## Screenshots
 
 | | |
 |---|---|
-| ![Basketball rooftop](images/midtown_rooftop.jpg) | ![Chinatown](images/midtown_chinatown.jpg) |
+| ![](images/01_hideout_hall.jpg)<br>Hideout | ![](images/02_hideout_practice.jpg)<br>Hideout practice hall |
+| ![](images/03_midtown_rooftop.jpg)<br>Midtown rooftops | ![](images/04_midtown_lot.jpg)<br>City garage lot |
+| ![](images/05_midtown_bridge.jpg)<br>Oracle bridge | ![](images/06_midtown_park.jpg)<br>The park |
+| ![](images/07_midtown_garden.jpg)<br>Park steps | ![](images/08_midtown_fight.jpg)<br>In a fight |
+| ![](images/09_midtown_plaza.jpg)<br>The plaza | ![](images/10_midtown_chinatown.jpg)<br>Chinatown |
 
 ## Install
 
-### Deadlock Mod Manager
-
-Open the [Daylock page](https://notmurph.github.io/daylock/) and click **Install with Mod Manager**.
-
-Or add the source by hand: in the Mod Manager go to Settings > Mods > Mod sources > Add source,
-paste this URL and add it. Daylock then shows up in the Mods Store.
+**Deadlock Mod Manager:** open the [install page](https://notmurph.github.io/daylock/) and click
+**Install with Mod Manager**. Or add this source under Settings > Mods > Mod sources:
 
 ```
 https://notmurph.github.io/daylock/dmm-source.json
 ```
 
-### Manual
+**Manual:** download the zip from [Releases](https://github.com/NotMurPh/daylock/releases/latest)
+and put `pak99_dir.vpk` in `Deadlock\game\citadel\addons\` (rename it if you already have a pak99).
 
-1. Download `Daylock_v1.0.zip` from [Releases](https://github.com/NotMurPh/daylock/releases).
-2. Put `pak99_dir.vpk` in `steamapps\common\Deadlock\game\citadel\addons\`.
-   If you already have a `pak99_dir.vpk` there, rename this one to any free number (`pak42_dir.vpk` etc).
-3. The addons folder has to be enabled in `gameinfo.gi`. Any mod manager does that for you.
+## Game updates
 
-To remove it, disable it in the Mod Manager or delete the vpk.
-
-## After Deadlock updates
-
-The mod contains full copies of the Midtown and Hideout maps. If an update changes one of those maps,
-turn Daylock off until there's an updated version here. Updates that don't touch the maps are fine.
+If an update doesn't change the maps, Daylock keeps working. If it does, turn it off and wait for me to update it.
 
 ## Credits
 

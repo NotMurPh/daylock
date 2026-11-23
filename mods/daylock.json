@@ -15,9 +15,11 @@
     "performance"
   ],
   "images": [
-    "https://notmurph.github.io/daylock/images/hideout.jpg",
-    "https://notmurph.github.io/daylock/images/midtown_rooftop.jpg",
-    "https://notmurph.github.io/daylock/images/midtown_chinatown.jpg"
+    "https://notmurph.github.io/daylock/images/01_hideout_hall.jpg",
+    "https://notmurph.github.io/daylock/images/03_midtown_rooftop.jpg",
+    "https://notmurph.github.io/daylock/images/05_midtown_bridge.jpg",
+    "https://notmurph.github.io/daylock/images/08_midtown_fight.jpg",
+    "https://notmurph.github.io/daylock/images/10_midtown_chinatown.jpg"
   ],
   "homepageUrl": "https://notmurph.github.io/daylock/",
   "updatedAt": "2026-11-23T22:00:00Z",
