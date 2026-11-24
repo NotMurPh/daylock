@@ -40,8 +40,9 @@ Daylock turns Deadlock's Midtown and Hideout into a sunny afternoon.
 
 ## Install
 
-**Deadlock Mod Manager:** open the [install page](https://notmurph.github.io/daylock/) and click
-**Install with Mod Manager**. Or add this source under Settings > Mods > Mod sources:
+**Deadlock Mod Manager** ([Nightly build](https://github.com/deadlock-mod-manager/deadlock-mod-manager/releases/tag/nightly) needed for now, the regular 2.3.0 release doesn't have
+custom mod sources yet): open the [install page](https://notmurph.github.io/daylock/) and click **Install with Mod Manager**. Or add this source
+under Settings > Mods > Mod sources:
 
 ```
 https://notmurph.github.io/daylock/dmm-source.json
@@ -56,8 +57,9 @@ If an update doesn't change the maps, Daylock keeps working. If it does, turn it
 
 ## Source code
 
-The code that builds Daylock is in [source](source/), MIT licensed. It makes the day maps from your own Deadlock
-install, so there are no game files in it. Build steps are in [source/README.md](source/README.md).
+The code that builds Daylock is in [source](source/), MIT licensed: the build, the test tools and the packaging.
+It makes the day maps from your own Deadlock install, so there are no game files in it. How to build, test and
+package it is in [source/README.md](source/README.md).
 
 ## Credits
 
