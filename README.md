@@ -54,6 +54,11 @@ and put `pak99_dir.vpk` in `Deadlock\game\citadel\addons\` (rename it if you alr
 
 If an update doesn't change the maps, Daylock keeps working. If it does, turn it off and wait for me to update it.
 
+## Source code
+
+The code that builds Daylock is in [source](source/), MIT licensed. It makes the day maps from your own Deadlock
+install, so there are no game files in it. Build steps are in [source/README.md](source/README.md).
+
 ## Credits
 
 Made by Murphy, built with [Claude](https://claude.com/claude-code).

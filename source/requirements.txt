@@ -1,0 +1,5 @@
+numpy>=2.0
+pillow>=11.0
+vpk>=1.4
+texture2ddecoder>=1.0.5
+etcpak>=0.9.8
