@@ -1,9 +1,8 @@
 # Build both Daylock maps from your own Deadlock install (run again after every game update).
 #   .\build_all.ps1                 everything: geometry, sun bakes, Midtown + Hideout -> work\out\*.vpk
 #   .\build_all.ps1 -Map dl_hideout only one map
-# Needs Python 3.14+ (packages in requirements.txt) and Go 1.22+. Takes ~10 minutes on a fast CPU.
-# Deadlock is read from the default Steam folder; if yours is elsewhere, change GAME in daymod\build_daymod.py
-# and daymod\extract_geom.py.
+# Needs Python 3.14+ (packages in requirements.txt) and Go 1.22+. Takes ~10 minutes on a 32-core CPU.
+# Deadlock is found through Steam; if it isn't, set DEADLOCK_DIR to your ...\steamapps\common\Deadlock folder.
 param([ValidateSet('all', 'dl_midtown', 'dl_hideout')][string]$Map = 'all')
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path

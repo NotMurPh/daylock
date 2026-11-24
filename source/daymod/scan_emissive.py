@@ -2,10 +2,10 @@
 import sys, json, collections
 import vpk
 from s2res import Resource, rerl
-import kv3t
+import kv3t, os, gamepath
 
-PAK = r'C:\Program Files (x86)\Steam\steamapps\common\Deadlock\game\citadel\pak01_dir.vpk'
-MAP = r'C:\Program Files (x86)\Steam\steamapps\common\Deadlock\game\citadel\maps\dl_midtown.vpk'
+PAK = os.path.join(gamepath.citadel(), 'pak01_dir.vpk')
+MAP = os.path.join(gamepath.citadel(), 'maps', 'dl_midtown.vpk')
 
 
 def mat_params(raw):

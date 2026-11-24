@@ -8,8 +8,9 @@ import vpk
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from s2res import Resource
 import kv3
+import gamepath
 
-GAME = r'C:\Program Files (x86)\Steam\steamapps\common\Deadlock\game\citadel'
+GAME = gamepath.citadel()   # set DEADLOCK_DIR if it isn't found
 # materials that should not block sunlight
 NO_CAST = re.compile(r'glass|water(?!front)|/fx/|sky|tools/|toolsnodraw|light_?beam|fog|decal|overlay|smoke|cloud|godray|glow|'
                      r'shadow_?blocker|volumetric|particle|translucent|_unlit|projected', re.I)

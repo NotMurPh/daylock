@@ -3,7 +3,8 @@
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$G = 'C:\Program Files (x86)\Steam\steamapps\common\Deadlock\game\citadel'
+. (Join-Path $here 'daymod\gamepath.ps1')
+$G = Get-Citadel
 function Say($msg, $icon = 'Information') { if ($env:DAYLOCK_QUIET) { Write-Output $msg } else { [void][System.Windows.Forms.MessageBox]::Show($msg, 'Daylock', 'OK', $icon) } }
 
 if (Get-Process deadlock -ErrorAction SilentlyContinue) {

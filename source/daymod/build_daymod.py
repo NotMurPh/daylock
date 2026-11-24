@@ -8,10 +8,10 @@ import os, re, sys, time, json, struct, shutil, hashlib, argparse
 import numpy as np
 import vpk
 from s2res import Resource, Texture
-import texio, daylight, kv3t, scan_emissive
+import texio, daylight, kv3t, scan_emissive, gamepath
 from vpkwrite import write_vpk, from_vpk
 
-GAME = r'C:\Program Files (x86)\Steam\steamapps\common\Deadlock\game\citadel'
+GAME = gamepath.citadel()   # set DEADLOCK_DIR if it isn't found
 MAPNAME = 'dl_midtown'
 MAP = os.path.join(GAME, 'maps', 'dl_midtown.vpk')
 PAK = os.path.join(GAME, 'pak01_dir.vpk')
@@ -65,12 +65,12 @@ CFG = dict(
     albedo_tint=[  # (regex, multiplier) on g_vColorTint1: tone down very bright surface sets so districts balance
         (r'materials/marble/museum/', 0.72),
     ],
-    # Hideout practice hall only (user 2026-11-23: 'main practice area looks plain, spawn area looks really good'):
+    # Hideout practice hall only (it looked plain next to the spawn room):
     # less flat fill, stronger sun patches, darker corners; mask = sunbake lmbox of the hall's box
     lightmap_regions={'dl_hideout': [(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'work', 'mask_hideout_hall.u8'),
                                       dict(fill_gain=0.45, sun_gain=3.2, sky_gamma=1.6, lamp_in=0.75))]},
     texture_grades={  # colour texture -> saturation/gain applied to the texture itself (material vector params don't stick)
-        # heavy 'HEAVY' crate + the other tough crate: user 2026-11-23 'lighter / more coloured so it pops like the other boxes'
+        # heavy 'HEAVY' crate + the other tough crate: lighter and more coloured so they pop like the other boxes
         'models/items/materials/crate_tough_2_color_png_223c6656.vtex_c': dict(sat=1.7, gain=1.12),
         'models/items/materials/item_crate_tough_color_tga_571c4dc0.vtex_c': dict(sat=1.7, gain=1.12),
     },
@@ -78,7 +78,7 @@ CFG = dict(
     world_tints={},  # per-draw paint tint {model: {draw index: rgb}} (previews via --extra-world-tints; indices change every map recompile)
     # paint tint (m_vTintColor) of world meshes in worldnodes/n0, matched by the STOCK colour (survives map recompiles):
     # mid-lane stone bridge, stock tan (211,182,139) is used only by its pieces and read gold in sunlight;
-    # user: "a bit more toned down" (2026-11-19)
+    # toned down to a neutral stone
     world_tint_recolor=[((211, 182, 139), (184, 180, 172))],
     material_replace={  # material -> (donor material, param overrides): makes opaque world meshes invisible
         'models/factory/factory_pollution_cloud_01.vmat_c': ('models/architecture/campus_01/campus_smoke_animated_01.vmat_c', {'g_flOpacityScale1': 0.0}),

@@ -1,16 +1,13 @@
-# Install / uninstall the Daylock day-time mod (Midtown + Hideout).
-#   .\install_daylock.ps1             install the built maps (work\out\*.vpk); gameinfo.gi is left original
-#   .\install_daylock.ps1 -Uninstall  remove everything (game goes back to the normal night maps)
-# Each map is a full modified copy at citadel\addons\maps\<map>.vpk (only lighting, sky, reflections,
-# glow strength, fog/glow particles, storm clouds and colour grade differ; geometry is untouched, Midtown's
-# entities are untouched, the Hideout (always a local server) has its fog entities switched off).
-# After a Deadlock update, rebuild first:
-#   .venv\Scripts\python daymod\build_daymod.py work                    (Midtown)
-#   .venv\Scripts\python daymod\build_daymod.py work --map dl_hideout   (Hideout)
+# Install / uninstall the Daylock maps you built (work\out\*.vpk). Deadlock must be closed.
+#   .\install_daylock.ps1             copy the built maps to citadel\addons\maps\
+#   .\install_daylock.ps1 -Uninstall  remove them (the game goes back to the normal night maps)
+# Each map is a full modified copy of the original, so a map is skipped if Deadlock updated it after your build:
+# run .\build_all.ps1 again in that case. Nothing else in the game folder is changed.
 param([switch]$Uninstall)
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$G = 'C:\Program Files (x86)\Steam\steamapps\common\Deadlock\game\citadel'
+. (Join-Path $here 'daymod\gamepath.ps1')
+$G = Get-Citadel
 $maps = @('dl_midtown', 'dl_hideout')
 if (Get-Process deadlock -ErrorAction SilentlyContinue) { Write-Host 'Close Deadlock first.' -ForegroundColor Yellow; exit 1 }
 
@@ -27,8 +24,6 @@ if ($Uninstall) {
     }
     $md = Join-Path $G 'addons\maps'
     if ((Test-Path $md) -and -not (Get-ChildItem $md)) { Remove-Item $md }
-    & (Join-Path $here 'fog_gameinfo.ps1') -Remove
-    & (Join-Path $here 'sun_gameinfo.ps1')
     Write-Host 'Daylock uninstalled.' -ForegroundColor Green
     exit 0
 }
@@ -37,12 +32,12 @@ foreach ($m in $maps) {
     $src = Join-Path $here "work\out\$m.vpk"
     $info = Join-Path $here ($(if ($m -eq 'dl_midtown') { 'work\out\build_info.json' } else { "work\out\build_info_$m.json" }))
     if (-not (Test-Path $src)) { Write-Host "no build for $m, skipped" -ForegroundColor Yellow; continue }
-    $sig = Get-MapSig (Join-Path $G "maps\$m.vpk")
+    # build_daymod.py records which original map it was built from (MD5 of its first MB + its size)
     $built = (Get-Content $info -Raw | ConvertFrom-Json).source_map_signature
-    if ($sig -ne $built) { Write-Host "$m changed since the last build (game update). Rebuild it first; skipped." -ForegroundColor Red; continue }
+    if ((Get-MapSig (Join-Path $G "maps\$m.vpk")) -ne $built) {
+        Write-Host "$m changed since your build (game update). Run .\build_all.ps1 first; skipped." -ForegroundColor Red; continue
+    }
     Copy-Item $src (Join-Path $G "addons\maps\$m.vpk") -Force
     Write-Host "installed $m"
 }
-& (Join-Path $here 'sun_gameinfo.ps1')      # make sure the test-only sun setting is at its default
-& (Join-Path $here 'fog_gameinfo.ps1') -Remove   # older versions added fog convars here; they had no effect, so keep gameinfo original
 Write-Host 'Daylock installed.' -ForegroundColor Green

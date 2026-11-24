@@ -1,4 +1,5 @@
 work/
+screenshots/
 .venv/
 __pycache__/
 *.exe
