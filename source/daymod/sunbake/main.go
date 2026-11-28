@@ -20,6 +20,11 @@ import (
 var rayZ float64
 var skyRays int
 
+// sky visibility depends only on the geometry: cached next to geom.bin, keyed by its size+mtime
+var adaptive = true
+var skyCached bool
+var skyCachePath, skyCacheKey string
+
 type rng uint64
 
 func (r *rng) f() float32 {
@@ -88,6 +93,10 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("[%.1fs] loaded\n", time.Since(t0).Seconds())
+	if mode == "density" {
+		lmDensity(sc, *size)
+		return
+	}
 	if mode == "lmbox" {
 		lmBox(sc, *pick, *out, *size)
 		return
@@ -117,6 +126,11 @@ func main() {
 	}
 	switch mode {
 	case "lightmap":
+		if st, err := os.Stat(*geom + "/geom.bin"); err == nil && os.Getenv("SUNBAKE_NOSKYCACHE") != "1" {
+			skyCachePath = fmt.Sprintf("%s/sky_%d_%d.u8", *geom, skyRays, *size)
+			skyCacheKey = fmt.Sprintf("%d %d", st.Size(), st.ModTime().UnixNano())
+		}
+		adaptive = os.Getenv("SUNBAKE_FULL") != "1"
 		bakeLightmap(bvh, sc, *out, *size, L, lu, lv, coneR, *samples, t0)
 	case "at":
 		for _, p := range [][3]float32{{8300, -400, 450}, {-8300, 400, 460}, {0, -1500, 300}, {1280, 6900, 900}} {
@@ -209,6 +223,14 @@ func bakeLightmap(bvh *BVH, sc *Scene, out string, W int, L, lu, lv [3]float32, 
 	cov := make([]uint8, W*H)
 	nrm := make([]uint8, W*H*3)
 	skyv := make([]uint8, W*H)
+	if skyRays > 0 && skyCachePath != "" {
+		if k, err := os.ReadFile(skyCachePath + ".key"); err == nil && string(k) == skyCacheKey {
+			if b, err := os.ReadFile(skyCachePath); err == nil && len(b) == W*H {
+				skyv, skyCached = b, true
+				fmt.Println("sky visibility from cache", skyCachePath)
+			}
+		}
+	}
 	var umax, vmax float32
 	for _, t := range sc.LmTri {
 		for j := 0; j < 3; j++ {
@@ -302,10 +324,20 @@ func bakeLightmap(bvh *BVH, sc *Scene, out string, W int, L, lu, lv [3]float32, 
 								// shading normal at center
 								nc := norm(add(scale(t.N[0], b[0]), add(scale(t.N[1], b[1]), scale(t.N[2], b[2]))))
 								nd := dot(nc, L)
-								hits := 0
+								hits, ns := 0, 0
 								if dot(ng, L) > 0 && nd > -0.05 {
 									for s := 0; s < S; s++ {
-										bb := bary(float32(x)+r.f(), float32(y)+r.f())
+										// first 8 rays stratified over the texel (2x2, twice); if they all agree the texel is
+										// fully lit or fully shadowed -> stop (adaptive: full S rays only on shadow edges)
+										jx, jy := r.f(), r.f()
+										if s < 8 {
+											jx, jy = (float32(s&1)+jx)*0.5, (float32((s>>1)&1)+jy)*0.5
+										}
+										if s == 8 && adaptive && (hits == 0 || hits == 8) {
+											break
+										}
+										ns++
+										bb := bary(float32(x)+jx, float32(y)+jy)
 										sum := float32(0)
 										for j := 0; j < 3; j++ {
 											if bb[j] < 0 {
@@ -326,8 +358,8 @@ func bakeLightmap(bvh *BVH, sc *Scene, out string, W int, L, lu, lv [3]float32, 
 										local++
 									}
 								}
-								vis[o] = uint8((hits*255 + S/2) / S)
-								if skyRays > 0 {
+								vis[o] = uint8((hits*255 + ns/2) / max(ns, 1))
+								if skyRays > 0 && !skyCached {
 									pc := add(scale(t.P[0], b[0]), add(scale(t.P[1], b[1]), scale(t.P[2], b[2])))
 									gu, gv := basis(ng)
 									sh := 0
@@ -367,6 +399,10 @@ func bakeLightmap(bvh *BVH, sc *Scene, out string, W int, L, lu, lv [3]float32, 
 	os.WriteFile(out+"/nrm.u8", nrm, 0o644)
 	if skyRays > 0 {
 		os.WriteFile(out+"/sky.u8", skyv, 0o644)
+		if !skyCached && skyCachePath != "" {
+			os.WriteFile(skyCachePath, skyv, 0o644)
+			os.WriteFile(skyCachePath+".key", []byte(skyCacheKey), 0o644)
+		}
 	}
 	n := 0
 	for _, c := range cov {

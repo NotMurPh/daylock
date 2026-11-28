@@ -76,8 +76,32 @@ def bc1_encode(img):
     return b''.join(_bc1_blocks(blocks[i:i + 262144].astype(np.int32)) for i in range(0, len(blocks), 262144))
 
 
+def _bc1_endpoints(blk):
+    """principal-axis endpoints + one least-squares refit: blocks holding two directions (a sun/shade edge)
+    stay on the palette line (min/max per channel can miss both clusters)"""
+    x = blk.astype(np.float32)
+    m = x.mean(1, keepdims=True); d = x - m
+    cov = np.einsum('nki,nkj->nij', d, d)
+    v = np.ones((len(x), 3), np.float32) / np.sqrt(3)
+    for _ in range(8):
+        v = np.einsum('nij,nj->ni', cov, v); v /= np.linalg.norm(v, axis=1, keepdims=True) + 1e-12
+    t = np.einsum('nki,ni->nk', d, v)
+    tmin, tmax = t.min(1, keepdims=True), t.max(1, keepdims=True)
+    lo = m[:, 0] + v * tmin; hi = m[:, 0] + v * tmax
+    w = np.round((t - tmin) / np.maximum(tmax - tmin, 1e-6) * 3) / 3     # snap to the 4 palette levels (weight of hi)
+    a = 1 - w
+    A11 = (a * a).sum(1); A12 = (a * w).sum(1); A22 = (w * w).sum(1)
+    det = A11 * A22 - A12 * A12
+    ok = np.abs(det) > 1e-6
+    bx = np.einsum('nk,nki->ni', a, x); by = np.einsum('nk,nki->ni', w, x)
+    dd = np.where(ok, det, 1)[:, None]
+    lo = np.where(ok[:, None], (A22[:, None] * bx - A12[:, None] * by) / dd, lo)
+    hi = np.where(ok[:, None], (A11[:, None] * by - A12[:, None] * bx) / dd, hi)
+    return np.clip(np.round(lo), 0, 255).astype(np.int32), np.clip(np.round(hi), 0, 255).astype(np.int32)
+
+
 def _bc1_blocks(blk):
-    lo = blk.min(1); hi = blk.max(1)
+    lo, hi = _bc1_endpoints(blk)
 
     def to565(c):
         return ((c[:, 0] * 31 + 127) // 255 << 11) | ((c[:, 1] * 63 + 127) // 255 << 5) | ((c[:, 2] * 31 + 127) // 255)

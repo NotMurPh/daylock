@@ -27,7 +27,7 @@ CFG = dict(
               'dl_hideout': dict(dir=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'work', 'sun_hideout_az170'),
                                  # az 170 / el 35 (was 200/32): sun also reaches the practice hall (~5% of its floor vs 0.6%), spawn room unchanged (~6%)
                                  geom=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'work', 'geom_hideout'), az=170, el=35)},
-    lightmap_sun=dict(__import__('sunlight').V9),
+    lightmap_sun=dict(__import__('sunlight').V9, vis_sharpen=1.0),   # crisper sun edges (bake: cone 0.27, 64 rays)
     probes_sun=dict(__import__('sunlight').V9, fill_gain=0.52),   # objects slightly less fill than surfaces: boxes don't pop out of rooms
     lightmap=dict(daylight.V8),
     probes=dict(daylight.V8),
@@ -89,7 +89,59 @@ CFG = dict(
     },
     sun=dict(color=[255, 241, 222], brightness=3.0, lumens=100000, pitch=52.0, yaw=150.0,
              skycolor=[150, 190, 235], skyintensity=1.0),
+    sky='daylock',   # 'daylock' = composed cloudy sky (build_sky.py); 'stock:<material>' = a stock sky material
 )
+
+# ---------------------------------------------------------------- looks ---
+# Each look is a full build (own sun bake, lighting, sky, colour grade), shipped as its own mod: day and dusk.
+# Keys: sun (lightmap+probe sun params, all maps), probes (probe-only), sun_bake {map: dir/az/el}, fog, cubemap,
+# sky, vpost_set, lut, emissive_rules, blank_particles, maps {map: {same keys}} (applied after the map's own settings).
+_W = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'work')
+LOOKS = {
+    'day': {},   # the original Daylock (v1.1)
+    # Issue #1: the old (pre-3-lane) Deadlock late-afternoon look (references: screenshots/ref_dusk): crisp and clear,
+    # painted clear sky with a big low sun (build_sky.clear_sky), creamy sunlight, cool blue-grey shade, no haze.
+    # Light is baked at az 170 el 30: at el 17 only ~10% of the open lane floor got sun (everything one flat shade);
+    # at az 170 el 30 ~21%, evenly over the three lanes, with diagonal shadow edges (sunbake sunscan).
+    # The painted sun disc sits lower (el 19, the references' height) so it still shows down the streets.
+    'dusk': dict(
+        sun_bake={'dl_midtown': dict(dir=os.path.join(_W, 'sun_midtown_az170_el30'), az=170, el=30)},
+        sun=dict(sun_gain=3.6, sun_color=(1.00, 0.91, 0.78), sky_gain=1.28, sky_color=(0.70, 0.78, 0.92), sky_gamma=1.35,
+                 fill_gain=0.90, fill_color=(0.94, 0.93, 0.93)),   # creamy-white sun, blue-grey shade (refs are cool)
+        fog=dict(scale=0.08),                 # less lit fog than Day: clear air
+        sky='clear',
+        clear_sky=dict(sun_el=19, zenith=(0.082, 0.124, 0.190), horizon=(0.180, 0.178, 0.176)),
+        sky_fog_mip_scale=[0.30, 0.32, 0.38],   # the fog samples these blurry sky mips: kept dim -> no haze
+        vpost_set={'m_bloomParams.m_flSkyboxBloomStrength': 0.20, 'm_bloomParams.m_flBloomStrength': 0.30},
+        lut=dict(contrast=0.32, saturation=1.14, cool_shadows=0.025, warm_highlights=0.02, shadow_lift=0.03, highlight_rolloff=0.30),
+    ),
+}
+
+
+def _apply(v, name=None):
+    for k in ('lightmap_sun', 'probes_sun'):
+        if 'sun' in v: CFG[k] = dict(CFG[k], **v['sun'])
+    if 'probes' in v: CFG['probes_sun'] = dict(CFG['probes_sun'], **v['probes'])
+    for k in ('fog', 'cubemap'):
+        if k in v: CFG[k] = dict(CFG[k], **v[k])
+    for m, sb in v.get('sun_bake', {}).items():
+        CFG['sun_bake'][m] = dict(CFG['sun_bake'][m], **sb)
+    for k in ('sky', 'sky_fog_mip_scale', 'clear_sky', 'emissive_rules', 'blank_particles'):
+        if k in v: CFG[k] = v[k]
+    if 'vpost_set' in v or 'lut' in v:
+        CFG['vpost'] = dict(CFG['vpost'], set=dict(CFG['vpost']['set'], **v.get('vpost_set', {})),
+                            lut=dict(CFG['vpost']['lut'], **v.get('lut', {})))
+    if name and name in v.get('maps', {}):
+        _apply(v['maps'][name])
+
+
+def apply_variant(look, name=None):
+    """name=None: settings for all maps; name=<map>: that map's extra settings (call after the map's own block)"""
+    if name is None:
+        _apply({k: x for k, x in LOOKS[look].items() if k != 'maps'})
+    else:
+        _apply(LOOKS[look].get('maps', {}).get(name, {}))
+
 
 def tex_jobs(name):
     lm = 'maps/%s/lightmaps/' % name
@@ -167,6 +219,10 @@ def convert_lightmap_sun(mp, name, params, sb, pool):
         a = np.fromfile(os.path.join(sb['dir'], n + '.u8'), np.uint8).reshape(H, W, 1)
         return texio.img2d_to_blocks(a)                                # (nblocks,16,1)
     vis, ndl, sky = load('vis'), load('ndl'), load('sky')
+    vs = float(params.get('vis_sharpen', 0))
+    if vs > 0:   # S-curve on sun coverage: shadow edges ~1.5x steeper (edge position kept), texel size is Valve's
+        v = vis.astype(np.float32) / 255
+        vis = np.clip(np.round((v + (v * v * (3 - 2 * v) - v) * vs) * 255), 0, 255).astype(np.uint8)
     rb = int(params.get('sky_blur', 0))
     if rb > 0:   # sky visibility is traced with few rays -> speckle; coverage-aware box blur (radius rb texels)
         a = np.fromfile(os.path.join(sb['dir'], 'sky.u8'), np.uint8).reshape(H, W).astype(np.float32)
@@ -588,8 +644,13 @@ def main():
     ap.add_argument('--cubemap-scale', type=float, default=None, help='override CFG cubemap scale (reflection brightness)')
     ap.add_argument('--sun-params', default=None, help='k=v,... overrides for sunlight params (forces lightmap rebuild)')
     ap.add_argument('--sun-mode', default=None, choices=['none', 'clone', 'replace', 'clone_only'])
+    ap.add_argument('--look', default='day', choices=sorted(LOOKS), help='lighting look (see LOOKS)')
+    ap.add_argument('--debug-sky-dirs', action='store_true', help='painted sky shows directions (red +x, green +y, blue up)')
     a = ap.parse_args()
     only = set(a.only.split(','))
+    tag = a.look
+    apply_variant(a.look)
+    if a.debug_sky_dirs: CFG['debug_sky_dirs'] = True
     if a.sun_mode: CFG['sun_mode'] = a.sun_mode
     CFG.setdefault('sun_mode', 'none')
     if a.debug_sky_tint: CFG['debug_sky_tint'] = True
@@ -629,11 +690,13 @@ def main():
         CFG['fog'] = dict(CFG['fog'], scale=0.0)
         CFG['fog_entities_off'] = True
         CFG['material_params'] = dict(CFG['material_params'], **{'models/base/blockout/blockout_glow_01.vmat_c': {'g_flOpacityScale1': 0.0}})
+    apply_variant(a.look, name)
     map_path = os.path.join(GAME, 'maps', name + '.vpk')
     jobs = tex_jobs(name)
-    stage_shared = os.path.join(a.work, 'stage')
-    stage = stage_shared if name == 'dl_midtown' else os.path.join(a.work, 'stage_' + name)
-    outdir = os.path.join(a.work, 'out')
+    sfx = '' if tag == 'day' else '_' + tag   # each look keeps its own cache + output ('day' = the original paths)
+    stage_shared = os.path.join(a.work, 'stage' + sfx)
+    stage = stage_shared if name == 'dl_midtown' else os.path.join(a.work, 'stage_' + name + sfx)
+    outdir = os.path.join(a.work, 'out' + sfx)
     os.makedirs(stage, exist_ok=True); os.makedirs(stage_shared, exist_ok=True); os.makedirs(outdir, exist_ok=True)
     mp = vpk.open(map_path)
     map_sig = (os.path.getsize(map_path), os.stat(map_path).st_mtime_ns)
@@ -689,7 +752,46 @@ def main():
         p = 'maps/%s/entities/default_ents.vents_c' % name
         replaced[p] = disable_fog_entities(replaced.get(p) or mp[p].read())
     pk = vpk.open(PAK)
-    if 'sky' in only:
+    if 'sky' in only and CFG['sky'].startswith('stock:'):
+        import build_sky
+        smat = CFG['sky'].split(':', 1)[1]
+        tp = build_sky.tex_path(pk, smat)
+        cache = os.path.join(stage_shared, 'sky_stock.vtex_c')
+        key = cache_key(smat, CFG.get('sky_fog_mip_scale'), CFG.get('sky_fog_mip_max', 128), (os.path.getsize(PAK), os.stat(PAK).st_mtime_ns),
+                        code=('build_sky.py',))
+        if not cache_ok(a.cache, (cache,), key):   # same fog-haze fix as the Daylock sky: darker blurry mips
+            sraw = pk[tp].read(); stex = Texture(sraw)
+            open(cache, 'wb').write(build_sky.encode_cube(sraw, stex, build_sky.cube_mip0(sraw, stex),
+                                                          CFG.get('sky_fog_mip_scale'), CFG.get('sky_fog_mip_max', 128)))
+            cache_mark(cache, key)
+        replaced[tp] = open(cache, 'rb').read()
+        sky = pk[smat].read()
+        for sk in SKY_NAMES:
+            replaced['materials/skybox/%s.vmat_c' % sk] = sky
+        log('sky -> stock', smat)
+    elif 'sky' in only and CFG['sky'] == 'clear':   # painted clear sky (Dusk), in the quarry texture slot
+        import build_sky
+        qraw = pk[build_sky.tex_path(pk, build_sky.QUARRY_MAT)].read(); qtex = Texture(qraw)
+        cp = dict(build_sky.CLEAR, **CFG.get('clear_sky', {}))
+        sb = CFG['sun_bake'].get('dl_midtown', {})
+        cp.setdefault('sun_az', sb.get('az', 180)); cp.setdefault('sun_el', sb.get('el', 25))
+        cache = os.path.join(stage_shared, 'sky_clear.vtex_c')
+        key = cache_key(cp, CFG.get('debug_sky_dirs'), CFG.get('sky_fog_mip_scale'), CFG.get('sky_fog_mip_max', 128),
+                        (os.path.getsize(PAK), os.stat(PAK).st_mtime_ns), code=('build_sky.py',))
+        if not cache_ok(a.cache, (cache,), key):
+            faces = build_sky.clear_sky(qtex.width, cp, debug_dirs=CFG.get('debug_sky_dirs', False))
+            # fog mips: same sky without the sun disc and with a weak glow (no sun haze on buildings in front of it)
+            fog_faces = None if CFG.get('debug_sky_dirs') else build_sky.clear_sky(
+                qtex.width, dict(cp, sun_radius=-1.0, glow_level=cp['glow_level'] * 0.3, halo_level=cp['halo_level'] * 0.5))
+            open(cache, 'wb').write(build_sky.encode_cube(qraw, qtex, faces, CFG.get('sky_fog_mip_scale'), CFG.get('sky_fog_mip_max', 128),
+                                                          fog_faces=fog_faces))
+            cache_mark(cache, key)
+            log('sky: painted clear sky', 'DEBUG DIRECTIONS' if CFG.get('debug_sky_dirs') else '')
+        replaced[build_sky.tex_path(pk, build_sky.QUARRY_MAT)] = open(cache, 'rb').read()
+        sky = pk[CFG['sky_material']].read()
+        for sk in SKY_NAMES:
+            replaced['materials/skybox/%s.vmat_c' % sk] = sky
+    elif 'sky' in only:
         import build_sky
         cache = os.path.join(stage_shared, 'sky_cube.vtex_c')
         key = cache_key(CFG.get('sky_fog_mip_scale'), CFG.get('sky_fog_mip_max', 128), (os.path.getsize(PAK), os.stat(PAK).st_mtime_ns),
@@ -805,7 +907,7 @@ def main():
     n = write_vpk(out + '.tmp', files)
     os.replace(out + '.tmp', out)
     src_hash = hashlib.md5(open(map_path, 'rb').read(1 << 20)).hexdigest() + '_%d' % os.path.getsize(map_path)
-    json.dump(dict(source_map_signature=src_hash, built=time.ctime(), replaced=sorted(replaced), cfg=CFG),
+    json.dump(dict(source_map_signature=src_hash, built=time.ctime(), look=a.look, replaced=sorted(replaced), cfg=CFG),
               open(os.path.join(outdir, 'build_info.json' if name == 'dl_midtown' else 'build_info_%s.json' % name), 'w'), indent=1, default=str)
     log('wrote', out, n, 'files', os.path.getsize(out) // (1 << 20), 'MB; replaced:', len(replaced))
     if a.install:

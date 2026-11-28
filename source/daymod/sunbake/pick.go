@@ -216,6 +216,15 @@ func sunScan(bvh *BVH, sc *Scene, arg string) {
 				r.pts = append(r.pts, add(c, scale(ng, 2)))
 			}
 		}
+		if os.Getenv("SUNBAKE_OPEN") == "1" { // only floors open to the sky (streets, not interiors)
+			open := r.pts[:0]
+			for _, q := range r.pts {
+				if !bvh.Occluded(q, [3]float32{0, 0, 1}, 80000) {
+					open = append(open, q)
+				}
+			}
+			r.pts = open
+		}
 		fmt.Println("room", r.name, "floor samples", len(r.pts))
 		rooms = append(rooms, r)
 	}

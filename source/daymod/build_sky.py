@@ -143,15 +143,23 @@ def downsample(img):
     return 0.25 * (img[0::2, 0::2] + img[1::2, 0::2] + img[0::2, 1::2] + img[1::2, 1::2])
 
 
-def encode_cube(qraw, qtex, faces, low_mip_scale=None, low_mip_max=128):
-    """Re-encode all mips (smallest first, 6 faces per mip) into the quarry texture's layout."""
-    chain = [faces]
-    for _ in range(qtex.mips - 1):
-        chain.append([downsample(f) for f in chain[-1]])
+def encode_cube(qraw, qtex, faces, low_mip_scale=None, low_mip_max=128, fog_faces=None):
+    """Re-encode all mips (smallest first, 6 faces per mip) into the quarry texture's layout.
+    fog_faces: sky used for the blurry mips (<= low_mip_max) that the cubemap fog samples - e.g. the clear sky
+    without its sun disc, so distant buildings in front of the sun don't get a white sun haze painted on them."""
+    def mips(top):
+        ch = [top]
+        for _ in range(qtex.mips - 1):
+            ch.append([downsample(f) for f in ch[-1]])
+        return ch
+    chain = mips(faces)
+    fog_chain = mips(fog_faces) if fog_faces is not None else chain
     payload = []
     for level in reversed(range(qtex.mips)):
-        for f in chain[level]:
+        for k, f in enumerate(chain[level]):
             img = f
+            if img.shape[0] <= low_mip_max:
+                img = fog_chain[level][k]
             if low_mip_scale is not None and img.shape[0] <= low_mip_max:
                 img = img * np.array(low_mip_scale, np.float32)   # only the blurry mips the cubemap fog samples
             if img.shape[0] < 4:  # pad tiny mips to one 4x4 block
@@ -167,3 +175,59 @@ def panorama(faces, w=1024):
     n = faces[0].shape[0]
     strip = np.concatenate([faces[3], np.rot90(faces[1], 1), faces[2][::-1, ::-1], np.rot90(faces[0], -1)], 1)
     return strip
+
+
+# ---- painted clear sky (Dusk look) --------------------------------------------------------------------------
+# World direction of every cube texel. Side faces: elevation axis from UP_EDGE (verified against the clear-sky
+# model); FACE_AXES gives each side face's outward normal and the world axis its 'across' coordinate runs along
+# (worked out in game with debug_dirs: red = +x, green = +y, blue = up).
+FACE_AXES = {0: ((1, 0, 0), (0, 1, 0)), 1: ((-1, 0, 0), (0, -1, 0)), 2: ((0, 1, 0), (-1, 0, 0)), 3: ((0, -1, 0), (1, 0, 0))}
+TOP_AXES = ((1, 0, 0), (0, 1, 0))   # top face: world axes along its columns (s) and rows (t)
+
+
+def directions(face, n):
+    c = (np.arange(n) + 0.5) / n * 2 - 1
+    s, t = np.meshgrid(c, c)
+    if face in (4, 5):
+        ax, ay = (np.array(v, np.float32) for v in TOP_AXES)
+        z = 1.0 if face == 4 else -1.0
+        d = s[..., None] * ax + t[..., None] * ay + np.array([0, 0, z], np.float32)
+    else:
+        nrm, acr = (np.array(v, np.float32) for v in FACE_AXES[face])
+        up = {'left': -s, 'right': s, 'bottom': t, 'top': -t}[UP_EDGE[face]]
+        across = t if UP_EDGE[face] in ('left', 'right') else s
+        d = nrm + up[..., None] * np.array([0, 0, 1], np.float32) + across[..., None] * acr
+    return d / np.linalg.norm(d, axis=-1, keepdims=True)
+
+
+CLEAR = dict(   # linear radiance as shown through the quarry material; tuned against screenshots/ref_dusk
+    zenith=(0.092, 0.122, 0.165), horizon=(0.195, 0.172, 0.150), sun_glow=(0.15, 0.09, 0.02), below=(0.12, 0.11, 0.10),
+    level=1.0, horizon_power=3.0, glow_width=18.0, glow_level=0.45, halo_width=60.0, halo_level=0.12,
+    sun_radius=4.8, sun_level=2.6, sun_color=(1.00, 0.95, 0.85),
+)
+
+
+def clear_sky(n, p=CLEAR, debug_dirs=False):
+    """Clear hazy sky: blue-grey zenith, pale warm haze at the horizon, warm glow and a big soft-edged sun disc."""
+    a, e = np.radians(p['sun_az']), np.radians(p['sun_el'])
+    L = np.array([np.cos(e) * np.cos(a), np.cos(e) * np.sin(a), np.sin(e)], np.float32)
+    out = []
+    for f in range(6):
+        d = directions(f, n)
+        if debug_dirs:
+            x, y = d[..., 0:1], d[..., 1:2]   # +x red, +y green, -x blue, -y yellow
+            col = (np.clip(x, 0, 1) * np.array([1, 0, 0], np.float32) + np.clip(y, 0, 1) * np.array([0, 1, 0], np.float32)
+                   + np.clip(-x, 0, 1) * np.array([0, 0, 1], np.float32) + np.clip(-y, 0, 1) * np.array([1, 1, 0], np.float32))
+            out.append((col ** 2 * 0.35).astype(np.float32)); continue
+        z = np.clip(d[..., 2:3], -1, 1)
+        h = np.clip(z, 0, 1)
+        t = 1 - np.power(1 - h, p['horizon_power'])          # 0 at the horizon -> 1 at the zenith
+        sky = np.array(p['horizon'], np.float32) * (1 - t) + np.array(p['zenith'], np.float32) * t
+        sky = np.where(z < 0, np.array(p['below'], np.float32), sky)
+        ang = np.degrees(np.arccos(np.clip(d @ L, -1, 1)))[..., None]
+        glow = p['glow_level'] * np.exp(-(ang / p['glow_width']) ** 2) + p['halo_level'] * np.exp(-(ang / p['halo_width']) ** 2)
+        sky = sky + glow * np.array(p['sun_glow'], np.float32) * (1 - 0.5 * t)
+        disc = np.clip((p['sun_radius'] - ang) / 0.6 + 0.5, 0, 1)   # soft 0.6 deg edge
+        sky = sky * (1 - disc) + disc * p['sun_level'] * np.array(p['sun_color'], np.float32)
+        out.append((sky * p['level']).astype(np.float32))
+    return out
